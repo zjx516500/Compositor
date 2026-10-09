@@ -19,7 +19,7 @@ struct RawDevelopSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Develop “\(url.lastPathComponent)”").font(.title2.bold())
+            Text(L10n.format("Develop “%@”", url.lastPathComponent)).font(.title2.bold())
             ZStack {
                 RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.35))
                 if let preview {
@@ -31,7 +31,7 @@ struct RawDevelopSheet: View {
                     // Import pressed: the full frame takes a second or more to develop.
                     VStack(spacing: 8) {
                         ProgressView().controlSize(.regular)
-                        Text("Importing…").foregroundStyle(.secondary)
+                        Text(L10n.text("Importing…")).foregroundStyle(.secondary)
                     }
                     .padding(16).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
                 } else if working { ProgressView().controlSize(.small) }
@@ -45,10 +45,10 @@ struct RawDevelopSheet: View {
                 slider("Boost", value: $settings.boost, range: 0...1, unit: "", precision: 2)
 
                 HStack {
-                    Button("Reset") { settings.reset() }.disabled(settings.isAsShot)
+                    Button(L10n.text("Reset")) { settings.reset() }.disabled(settings.isAsShot)
                     Spacer()
-                    Button("Cancel") { session.finishRawDevelop(nil) }.keyboardShortcut(.cancelAction)
-                    Button("Import") { session.finishRawDevelop(settings) }.keyboardShortcut(.defaultAction)
+                    Button(L10n.text("Cancel")) { session.finishRawDevelop(nil) }.keyboardShortcut(.cancelAction)
+                    Button(L10n.text("Import")) { session.finishRawDevelop(settings) }.keyboardShortcut(.defaultAction)
                 }
             }
             .disabled(session.rawImporting)
@@ -78,7 +78,7 @@ struct RawDevelopSheet: View {
     private func slider(_ title: String, value: Binding<Float>, range: ClosedRange<Float>,
                         unit: String, precision: Int) -> some View {
         HStack(spacing: 10) {
-            Text(title).frame(width: 90, alignment: .leading)
+            Text(L10n.text(title)).frame(width: 90, alignment: .leading)
             Slider(value: value, in: range).frame(width: 300)
             Text(String(format: "%.\(precision)f%@", value.wrappedValue, unit))
                 .monospacedDigit().foregroundStyle(.secondary)

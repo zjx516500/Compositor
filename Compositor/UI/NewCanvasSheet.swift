@@ -44,7 +44,7 @@ nonisolated enum NewCanvasUnit: String, CaseIterable, Sendable {
 /// What a new canvas starts as: see-through, or a Background layer of white or black.
 nonisolated enum NewCanvasBackground: String, CaseIterable, Sendable {
     case transparent, white, black
-    var title: String { "\(rawValue.capitalized) canvas" }
+    var title: String { L10n.format("%@ canvas", L10n.text(rawValue.capitalized)) }
     var next: NewCanvasBackground { Self.allCases[(Self.allCases.firstIndex(of: self)! + 1) % Self.allCases.count] }
     var color: CGColor? {
         switch self {
@@ -73,8 +73,8 @@ struct NewCanvasSheet: View {
     private var pixelHeight: Int? { unit.pixels(height, resolution: resolution) }
     private var valid: Bool { pixelWidth != nil && pixelHeight != nil }
     private var resolutionHelp: String {
-        let size = unit != .pixels ? pixelWidth.flatMap { w in pixelHeight.map { h in " · \(Int(resolution)) DPI: \(w) × \(h) pixels" } } : nil
-        return "Resolution: 72 for screens, 300 for print. Click to switch." + (size ?? "")
+        let size = unit != .pixels ? pixelWidth.flatMap { w in pixelHeight.map { h in L10n.format(" · %@ DPI: %@ × %@ pixels", Int(resolution), w, h) } } : nil
+        return L10n.text("Resolution: 72 for screens, 300 for print. Click to switch.") + (size ?? "")
     }
     /// Shows the sizes in another unit, the same canvas written differently.
     private func switchUnit(to new: NewCanvasUnit) {
@@ -93,15 +93,15 @@ struct NewCanvasSheet: View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 14) {
                 HStack {
-                    Text("New canvas").font(.title2.weight(.semibold))
+                    Text(L10n.text("New canvas")).font(.title2.weight(.semibold))
                     Spacer()
                     // Preset sizes, tucked into a More button; the size in use is checked.
                     Menu {
-                        Picker("Size", selection: preset) {
-                            Text("Custom").tag(CanvasPreset?.none)
+                        Picker(L10n.text("Size"), selection: preset) {
+                            Text(L10n.text("Custom")).tag(CanvasPreset?.none)
                             ForEach(CanvasPreset.groups.indices, id: \.self) { group in
                                 Divider()
-                                ForEach(CanvasPreset.groups[group]) { Text($0.title).tag(CanvasPreset?.some($0)) }
+                                ForEach(CanvasPreset.groups[group]) { Text(L10n.text($0.title)).tag(CanvasPreset?.some($0)) }
                             }
                         }
                         .pickerStyle(.inline).labelsHidden()
@@ -117,8 +117,8 @@ struct NewCanvasSheet: View {
                             .padding(.trailing, -10)
                     }
                     .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
-                    .help("Preset sizes for screens and common formats")
-                    .accessibilityLabel("Preset sizes")
+                    .help(L10n.text("Preset sizes for screens and common formats"))
+                    .accessibilityLabel(L10n.text("Preset sizes"))
                 }
             }
             HStack(spacing: 16) {
@@ -147,15 +147,15 @@ struct NewCanvasSheet: View {
             }
             .font(.callout).foregroundStyle(.secondary)
             if !valid {
-                Text(unit == .pixels ? "Enter whole numbers from 1 to \(DocumentLimits.maxSide.formatted()) pixels."
-                                     : "Enter a size up to \(DocumentLimits.maxSide.formatted()) pixels at this DPI.")
+                Text(unit == .pixels ? L10n.format("Enter whole numbers from 1 to %@ pixels.", DocumentLimits.maxSide.formatted())
+                                     : L10n.format("Enter a size up to %@ pixels at this DPI.", DocumentLimits.maxSide.formatted()))
                     .font(.callout).foregroundStyle(.orange)
             }
             HStack(spacing: 10) {
-                Button("Open project") { onOpen?() }.buttonStyle(.bordered)
-                Button("Import image") { session.showsImporter = true }.buttonStyle(.bordered)
+                Button(L10n.text("Open project")) { onOpen?() }.buttonStyle(.bordered)
+                Button(L10n.text("Import image")) { session.showsImporter = true }.buttonStyle(.bordered)
                 Spacer()
-                Button("Create canvas") {
+                Button(L10n.text("Create canvas")) {
                     guard let w = pixelWidth, let h = pixelHeight else { return }
                     if let onCreate { onCreate(w, h, resolution, background.color) }
                     else { session.createDocument(width: w, height: h, emptyLayer: true, resolution: resolution, background: background.color) }
@@ -202,12 +202,12 @@ struct NewCanvasSheet: View {
     }
     private func dimension(_ title: String, text: Binding<String>, field: Field) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.callout.weight(.medium))
+            Text(L10n.text(title)).font(.callout.weight(.medium))
             HStack {
-                TextField(title, text: text).textFieldStyle(.plain)
+                TextField(L10n.text(title), text: text).textFieldStyle(.plain)
                     .focused($focusedField, equals: field)
                     .accessibilityIdentifier(title.lowercased() + "Input")
-                Text(unit.rawValue).foregroundStyle(.secondary)
+                Text(L10n.text(unit.rawValue)).foregroundStyle(.secondary)
             }
             .padding(12).background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 7))
         }
@@ -223,14 +223,14 @@ private struct CyclePill: View {
     init(_ title: String, help: String, action: @escaping () -> Void) { self.title = title; self.help = help; self.action = action }
     var body: some View {
         Button(action: action) {
-            Text(title).foregroundStyle(.secondary).monospacedDigit()
+            Text(L10n.text(title)).foregroundStyle(.secondary).monospacedDigit()
                 .padding(.horizontal, 6).padding(.vertical, 2)
                 .background(.quaternary.opacity(hovering ? 1 : 0), in: Capsule())
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
-        .help(help)
+        .help(L10n.text(help))
     }
 }
 

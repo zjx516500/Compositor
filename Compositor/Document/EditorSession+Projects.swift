@@ -35,6 +35,7 @@ extension EditorSession {
             }, resolution: manifest.resolution ?? 72, guides: manifest.guides ?? [])
         activeLayerID = manifest.activeLayerID
         projectURL = url
+        sourceImageURL = nil
         renamingLayerID = nil
         history.reset()
         viewport.fit(documentSize: document!.size)
@@ -69,6 +70,7 @@ extension EditorSession {
         activeLayerID = nil
         renamingLayerID = nil
         projectURL = nil
+        sourceImageURL = nil
         history.reset()
     }
 

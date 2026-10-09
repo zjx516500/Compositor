@@ -19,7 +19,7 @@ struct CommandPaletteEntry: Identifiable {
     init(id: String, title: String? = nil, shortcut: String?, isEnabled: Bool, isOn: Bool = false,
          perform: @escaping @MainActor () -> Void) {
         self.id = id
-        self.title = title ?? id
+        self.title = title ?? L10n.text(id)
         self.shortcut = shortcut
         self.isEnabled = isEnabled
         self.isOn = isOn
@@ -106,7 +106,7 @@ enum CommandPaletteMenu {
     /// The app menu, the first in the bar, is always left out.
     static func entries(in menu: NSMenu, skipping: Set<String>) -> [CommandPaletteEntry] {
         var seen: [String: Int] = [:]
-        return collect(menu, root: menu, path: [], skipping: skipping, seen: &seen)
+        return collect(menu, root: menu, path: [], skipping: Set(skipping.map { L10n.text($0) }), seen: &seen)
     }
 
     private static func collect(_ menu: NSMenu, root: NSMenu, path: [String], skipping: Set<String>,
@@ -115,6 +115,7 @@ enum CommandPaletteMenu {
         // its delegate; ask for that, then let AppKit validate, so what's read is what the menu would show now.
         menu.delegate?.menuNeedsUpdate?(menu)
         menu.update()
+        if menu === NSApp.mainMenu { InterfaceMenus.localize() }
         var result: [CommandPaletteEntry] = []
         var sameTitle: [String: Int] = [:]
         for (index, item) in menu.items.enumerated() {
@@ -216,7 +217,7 @@ extension CommandPaletteEntry {
             ("Zoom", "Z", .zoom, nil),
         ]
         return tools.map { name, key, tool, setup in
-            CommandPaletteEntry(id: "Tool › \(name)", shortcut: key, isEnabled: session.document != nil,
+            CommandPaletteEntry(id: "Tool › \(name)", title: L10n.text("Tool") + " › " + L10n.text(name), shortcut: key, isEnabled: session.document != nil,
                                 perform: { [weak session] in
                                     guard let session else { return }
                                     session.selectTool(tool)

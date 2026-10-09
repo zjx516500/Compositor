@@ -8,7 +8,12 @@ final class ProjectTab: Identifiable {
     let session: EditorSession
     let controller: ProjectController
     let defaultName: String
-    var title: String { session.projectURL?.deletingPathExtension().lastPathComponent ?? defaultName }
+    var title: String { session.projectURL?.deletingPathExtension().lastPathComponent ?? session.sourceImageURL?.deletingPathExtension().lastPathComponent ?? localizedDefaultName }
+    private var localizedDefaultName: String {
+        if defaultName == "Untitled" { return L10n.text("Untitled") }
+        if defaultName.hasPrefix("Untitled ") { return L10n.format("Untitled %@", String(defaultName.dropFirst(9))) }
+        return defaultName
+    }
     init(name: String) {
         defaultName = name
         session = EditorSession()
@@ -73,6 +78,8 @@ final class ProjectWorkspace {
         var urls = suppliedURL.map { [$0] } ?? []
         if urls.isEmpty {
             let panel = NSOpenPanel()
+            panel.title = L10n.text("Open Project")
+            panel.prompt = L10n.text("Open")
             panel.allowedContentTypes = [.compositorProject]
             panel.allowsMultipleSelection = true
             panel.treatsFilePackagesAsDirectories = false
@@ -225,7 +232,7 @@ final class ProjectWorkspace {
         var copied = sourceDocument.layers.filter { included.contains($0.id) }
         let used = target.session.document?.layers.reduce(0) { $0 + ($1.asset.map { $0.image.width * $0.image.height } ?? 0) } ?? 0
         let added = copied.reduce(0) { $0 + ($1.asset.map { $0.image.width * $0.image.height } ?? 0) }
-        guard used + added <= DocumentLimits.documentPixelBudget else { target.session.importError = "The copied layers exceed this project’s \(DocumentLimits.documentBudgetMegapixels)-megapixel limit."; return }
+        guard used + added <= DocumentLimits.documentPixelBudget else { target.session.importError = L10n.format("The copied layers exceed this project’s %@-megapixel limit.", DocumentLimits.documentBudgetMegapixels); return }
         isManaging = true
         sourceTab.session.isProjectBusy = true
         target.session.isProjectBusy = true

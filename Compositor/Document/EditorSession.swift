@@ -113,6 +113,8 @@ final class EditorSession {
     var effectSelection: LayerEffectSelection?
     @ObservationIgnored var effectsPreviews = EffectsPreviewCache()
     var projectURL: URL?
+    /// The image that created this canvas, used for new save/export destinations. Later layer imports keep it.
+    var sourceImageURL: URL?
     /// Blocks overlapping edits immediately. Not observed by the UI: controls only dim via
     /// `showsBusy`, after an operation has run long enough to be worth showing, so quick
     /// edits (invert, fills, stroke commits) never flash the interface.
@@ -830,6 +832,7 @@ final class EditorSession {
           let point = document == nil ? nil : request.point
           for (url, scoped) in request.files {
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            let createsCanvas = document == nil
             do {
                 guard url.isFileURL else { throw ImageImportError.unsupported }
                 let usedPixels = document?.layers.reduce(0) { total, layer in
@@ -853,7 +856,7 @@ final class EditorSession {
                                                                          remainingPixels: DocumentLimits.documentPixelBudget - usedPixels)
                     insert(asset, centeredAt: point)
                 } else if PSDReader.matches(url) {
-                    beginPSDReading(title: "Open “\(url.lastPathComponent)”?", confirmTitle: "Import")
+                    beginPSDReading(title: L10n.format("Open “%@”?", url.lastPathComponent), confirmTitle: "Import")
                     let imported: PSDImport
                     do {
                         let parsed = try await ImageImporter.shared.loadPhotoshop(url, remainingPixels: DocumentLimits.documentPixelBudget - usedPixels)
@@ -864,6 +867,7 @@ final class EditorSession {
                             let asset = try await ImageImporter.shared.decode(url, remainingPixels: DocumentLimits.documentPixelBudget - usedPixels,
                                                                               flattenedPhotoshop: true)
                             insert(asset, centeredAt: point)
+                            if createsCanvas { sourceImageURL = url }
                             continue
                         }
                         let assets = try await ImageImporter.shared.photoshopAssets(parsed)
@@ -878,6 +882,7 @@ final class EditorSession {
                     let asset = try await ImageImporter.shared.decode(url, remainingPixels: DocumentLimits.documentPixelBudget - usedPixels)
                     insert(asset, centeredAt: point)
                 }
+                if createsCanvas, document != nil { sourceImageURL = url }
             } catch {
                 failures.append("\(url.lastPathComponent): \(error.localizedDescription)")
             }

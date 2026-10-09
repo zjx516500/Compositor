@@ -64,7 +64,7 @@ final class ProjectController {
             let chosen: (data: Data, format: ExportFormat)? = await withCheckedContinuation { continuation in
                 let sheet = NSWindow()
                 sheet.styleMask = [.titled, .fullSizeContentView]
-                sheet.title = "Export As"
+                sheet.title = L10n.text("Export As")
                 sheet.contentViewController = NSHostingController(rootView: ExportAsSheet(
                     raster: raster, session: session, format: start ?? lastExportFormat) { chosen in
                     window.endSheet(sheet)
@@ -87,15 +87,21 @@ final class ProjectController {
     /// The format Export As last used, offered first next time.
     private var lastExportFormat = ExportFormat.png
 
+    func suggestedFilename(extension fileExtension: String, date: Date = Date(), timeZone: TimeZone = .current) -> String {
+        SaveFilename.suggested(source: session.projectURL ?? session.sourceImageURL,
+                               untitled: L10n.text("Untitled"), extension: fileExtension, date: date, timeZone: timeZone)
+    }
+
     /// Where an export goes: the project's name, with the format's extension.
     private func savePanel(for format: ExportFormat) async -> URL? {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [format.type]
         panel.canCreateDirectories = true
         panel.isExtensionHidden = false
-        panel.title = "Export " + format.rawValue
-        panel.nameFieldStringValue = (session.projectURL?.deletingPathExtension().lastPathComponent ?? "Untitled")
-            + "." + (format.type.preferredFilenameExtension ?? format.rawValue.lowercased())
+        panel.title = L10n.text("Export ") + format.rawValue
+        panel.nameFieldStringValue = suggestedFilename(extension: format.type.preferredFilenameExtension ?? format.rawValue.lowercased())
+        panel.directoryURL = (session.projectURL ?? session.sourceImageURL)?.deletingLastPathComponent()
+        panel.localizeForSaving()
         let response: NSApplication.ModalResponse
         if let window { response = await panel.beginSheetModal(for: window) }
         else { response = await panel.begin() }
@@ -107,7 +113,7 @@ final class ProjectController {
         let options: CanvasSizeOptions? = await withCheckedContinuation { continuation in
             let sheet = NSWindow()
             sheet.styleMask = [.titled, .fullSizeContentView]
-            sheet.title = "Canvas Size"
+            sheet.title = L10n.text("Canvas Size")
             sheet.contentViewController = NSHostingController(rootView: CanvasSizeSheet(document: document, session: session) { options in
                 window.endSheet(sheet)
                 sheet.orderOut(nil)
@@ -129,7 +135,7 @@ final class ProjectController {
         let options: ImageSizeOptions? = await withCheckedContinuation { continuation in
             let sheet = NSWindow()
             sheet.styleMask = [.titled, .fullSizeContentView]
-            sheet.title = "Image Size"
+            sheet.title = L10n.text("Image Size")
             sheet.contentViewController = NSHostingController(rootView: ImageSizeSheet(document: document) { options in
                 window.endSheet(sheet)
                 sheet.orderOut(nil)
@@ -151,7 +157,7 @@ final class ProjectController {
         let options: TrimOptions? = await withCheckedContinuation { continuation in
             let sheet = NSWindow()
             sheet.styleMask = [.titled, .fullSizeContentView]
-            sheet.title = "Trim"
+            sheet.title = L10n.text("Trim")
             sheet.contentViewController = NSHostingController(rootView: TrimSheet { options in
                 window.endSheet(sheet)
                 sheet.orderOut(nil)
@@ -178,7 +184,7 @@ final class ProjectController {
         let settings: (LayoutGrid, GridAppearance)? = await withCheckedContinuation { continuation in
             let sheet = NSWindow()
             sheet.styleMask = [.titled, .fullSizeContentView]
-            sheet.title = "Grid"
+            sheet.title = L10n.text("Grid")
             sheet.contentViewController = NSHostingController(rootView: GridSettingsSheet(
                 session: session, grid: original.grid, appearance: original.appearance,
                 preview: { [session] grid, appearance in
@@ -213,8 +219,10 @@ final class ProjectController {
             panel.allowedContentTypes = [.compositorProject]
             panel.canCreateDirectories = true
             panel.isExtensionHidden = false
-            panel.nameFieldStringValue = session.projectURL?.lastPathComponent ?? "Untitled.comp"
-            panel.title = asNew ? "Save Project As" : "Save Project"
+            panel.nameFieldStringValue = suggestedFilename(extension: "comp")
+            panel.directoryURL = (session.projectURL ?? session.sourceImageURL)?.deletingLastPathComponent()
+            panel.localizeForSaving()
+            panel.title = asNew ? L10n.text("Save Project As") : L10n.text("Save Project")
             let response: NSApplication.ModalResponse
             if let window { response = await panel.beginSheetModal(for: window) }
             else { response = await panel.begin() }
@@ -266,7 +274,7 @@ final class ProjectController {
             panel.allowsMultipleSelection = false
             panel.canChooseDirectories = false
             panel.treatsFilePackagesAsDirectories = false
-            panel.title = "Open Project"
+            panel.title = L10n.text("Open Project")
             let response: NSApplication.ModalResponse
             if let window { response = await panel.beginSheetModal(for: window) }
             else { response = await panel.begin() }
@@ -336,11 +344,11 @@ final class ProjectController {
         await finishWriting()
         guard session.isModified, session.document != nil else { return true }
         let alert = NSAlert()
-        alert.messageText = "Save changes to \(session.projectURL?.lastPathComponent ?? "Untitled")?"
-        alert.informativeText = "Your changes will be lost if you don’t save them."
-        alert.addButton(withTitle: "Save")
-        alert.addButton(withTitle: "Cancel")
-        alert.addButton(withTitle: "Don’t Save")
+        alert.messageText = L10n.format("Save changes to %@?", session.projectURL?.lastPathComponent ?? session.sourceImageURL?.lastPathComponent ?? L10n.text("Untitled"))
+        alert.informativeText = L10n.text("Your changes will be lost if you don’t save them.")
+        alert.addButton(withTitle: L10n.text("Save"))
+        alert.addButton(withTitle: L10n.text("Cancel"))
+        alert.addButton(withTitle: L10n.text("Don’t Save"))
         let response = await show(alert)
         if response == .alertFirstButtonReturn { return await saveCurrent() }
         return response == .alertThirdButtonReturn
@@ -349,9 +357,9 @@ final class ProjectController {
     private func showError(_ title: String, error: Error) async {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = title
+        alert.messageText = L10n.text(title)
         alert.informativeText = error.localizedDescription
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: L10n.text("OK"))
         _ = await show(alert)
     }
 

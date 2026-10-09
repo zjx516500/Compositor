@@ -55,16 +55,16 @@ struct ExportAsSheet: View {
     @ViewBuilder private var sheet: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 8) {
-                Text("Export As").font(.title2.bold())
+                Text(L10n.text("Export As")).font(.title2.bold())
                 Spacer()
-                Button("Fit") { zoom = nil }.disabled(zoom == nil)
-                    .help("Show the whole image (⌘0)")
+                Button(L10n.text("Fit")) { zoom = nil }.disabled(zoom == nil)
+                    .help(L10n.text("Show the whole image (⌘0)"))
                 Button { zoomBy(1) } label: { Image(systemName: "plus.magnifyingglass") }
                     .disabled(JPEGPreview.step(from: shownZoom, in: 1) == nil)
-                    .help("Zoom in (⌘+), now \(percent). At 100% each pixel of the export is one pixel of the screen")
+                    .help(L10n.format("Zoom in (⌘+), now %@. At 100%% each pixel of the export is one pixel of the screen", percent))
                 Button { zoomBy(-1) } label: { Image(systemName: "minus.magnifyingglass") }
                     .disabled(JPEGPreview.step(from: shownZoom, in: -1) == nil)
-                    .help("Zoom out (⌘−), now \(percent)")
+                    .help(L10n.format("Zoom out (⌘−), now %@", percent))
             }
             .padding(.bottom, -8)
             ZStack {
@@ -76,64 +76,64 @@ struct ExportAsSheet: View {
                     ProgressView().padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
                 }
             }.frame(width: JPEGPreview.frame.width, height: JPEGPreview.frame.height).clipped()
-                .help("Drag or scroll to move around; double-click switches between Fit and 100%")
+                .help(L10n.text("Drag or scroll to move around; double-click switches between Fit and 100%"))
             Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 12) {
                 GridRow {
-                    Text("Format")
-                    Picker("Format", selection: $format) {
-                        ForEach(ExportFormat.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    Text(L10n.text("Format"))
+                    Picker(L10n.text("Format"), selection: $format) {
+                        ForEach(ExportFormat.allCases, id: \.self) { Text(L10n.text($0.rawValue)).tag($0) }
                     }
                     .pickerStyle(.segmented).labelsHidden().fixedSize()
                 }
                 GridRow {
-                    Text("Size")
+                    Text(L10n.text("Size"))
                     HStack(spacing: 6) {
-                        sizeField(width, set: setWidth).help("Width in pixels; the height follows, keeping the proportions")
+                        sizeField(width, set: setWidth).help(L10n.text("Width in pixels; the height follows, keeping the proportions"))
                         Text("×").foregroundStyle(.secondary)
-                        sizeField(height, set: setHeight).help("Height in pixels; the width follows, keeping the proportions")
-                        Text("px").foregroundStyle(.secondary)
-                        Menu("\(scalePercent)%") {
+                        sizeField(height, set: setHeight).help(L10n.text("Height in pixels; the width follows, keeping the proportions"))
+                        Text(L10n.text("px")).foregroundStyle(.secondary)
+                        Menu(L10n.format("%@%%", scalePercent)) {
                             ForEach([25, 50, 75, 100, 200], id: \.self) { percent in
-                                Button("\(percent)%") { setScale(Double(percent) / 100) }
+                                Button(L10n.format("%@%%", percent)) { setScale(Double(percent) / 100) }
                             }
                         }
-                        .fixedSize().help("Scale the export: the document stays as it is")
+                        .fixedSize().help(L10n.text("Scale the export: the document stays as it is"))
                     }
                 }
                 if format == .jpeg {
                     GridRow {
-                        Text("Quality")
+                        Text(L10n.text("Quality"))
                         HStack {
                             Slider(value: $options.quality, in: 0...1, step: 0.01).frame(width: 300)
-                            Text("\(Int((options.quality * 100).rounded()))%").monospacedDigit().frame(width: 45, alignment: .trailing)
+                            Text(L10n.format("%@%%", Int((options.quality * 100).rounded()))).monospacedDigit().frame(width: 45, alignment: .trailing)
                         }
                     }
                 }
                 if format == .pdf {
                     GridRow {
-                        Text("Page")
+                        Text(L10n.text("Page"))
                         Text(pageSize).foregroundStyle(.secondary)
                     }
                 }
                 // JPEG has no transparency, and a PDF's page shows through it, so both fill it with a color.
                 if format != .png {
                     GridRow {
-                        Text("Background")
-                        DialogColorSwatch(title: "Export Background", color: matte, session: session)
-                            .help("Color that fills transparent areas")
+                        Text(L10n.text("Background"))
+                        DialogColorSwatch(title: L10n.text("Export Background"), color: matte, session: session)
+                            .help(L10n.text("Color that fills transparent areas"))
                     }
                 }
             }
             HStack(spacing: 12) {
-                Text(format == .png ? "Transparency kept · sRGB" : "sRGB")
+                Text(format == .png ? L10n.text("Transparency kept · sRGB") : L10n.text("sRGB"))
                     .foregroundStyle(.secondary)
                 Spacer()
                 if let error { Text(error).foregroundStyle(.red) }
                 else if isReady, let result {
                     Text(ByteCountFormatter.string(fromByteCount: Int64(result.data.count), countStyle: .file)).monospacedDigit()
-                } else { Text("Updating…").foregroundStyle(.secondary) }
-                Button("Cancel") { DialogColorSwatch.closePicker(session); finish(nil) }.configuredNativeShortcut(.escape)
-                Button("Export…") {
+                } else { Text(L10n.text("Updating…")).foregroundStyle(.secondary) }
+                Button(L10n.text("Cancel")) { DialogColorSwatch.closePicker(session); finish(nil) }.configuredNativeShortcut(.escape)
+                Button(L10n.text("Export…")) {
                     DialogColorSwatch.closePicker(session)
                     if format == .jpeg { UserDefaults.standard.set(options.quality, forKey: Self.qualityKey) }
                     if let result { finish((result.data, result.settings.format)) }

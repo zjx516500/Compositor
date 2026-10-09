@@ -21,8 +21,8 @@ struct ColorPaletteControls: View {
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
             .offset(x: swatchSize + 3, y: -3)
-            .help("Swap foreground and background (X)")
-            .accessibilityLabel("Swap colors")
+            .help(L10n.text("Swap foreground and background (X)"))
+            .accessibilityLabel(L10n.text("Swap colors"))
             Button { session.resetPaletteColors() } label: {
                 Image(systemName: "arrow.counterclockwise")
                     .font(.system(size: 7.5, weight: .medium))
@@ -32,17 +32,17 @@ struct ColorPaletteControls: View {
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
             .offset(x: -1, y: swatchSize + 3)
-            .help("Default colors (D)")
-            .accessibilityLabel("Default colors")
+            .help(L10n.text("Default colors (D)"))
+            .accessibilityLabel(L10n.text("Default colors"))
         }
         .frame(width: swatchSize + swatchOffset, height: swatchSize + swatchOffset, alignment: .topLeading)
         .disabled(!session.canEditPalette)
         .popover(isPresented: Binding(get: { choosingMaskBackground != nil }, set: { if !$0 { choosingMaskBackground = nil } })) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(choosingMaskBackground == true ? "Mask background" : "Mask foreground").font(.headline)
+                Text(choosingMaskBackground == true ? L10n.text("Mask background") : L10n.text("Mask foreground")).font(.headline)
                 HStack {
-                    Button("Black · Hide") { chooseMask(.black) }
-                    Button("White · Reveal") { chooseMask(.white) }
+                    Button(L10n.text("Black · Hide")) { chooseMask(.black) }
+                    Button(L10n.text("White · Reveal")) { chooseMask(.white) }
                 }
             }.padding(16)
         }
@@ -69,7 +69,7 @@ struct ColorPaletteControls: View {
                 .frame(width: swatchSize, height: swatchSize)
                 .contentShape(shape)
         }
-        .buttonStyle(.plain).help(label).accessibilityLabel(label)
+        .buttonStyle(.plain).help(L10n.text(label)).accessibilityLabel(L10n.text(label))
     }
     private func chooseMask(_ color: PaletteColor) {
         guard let background = choosingMaskBackground else { return }
